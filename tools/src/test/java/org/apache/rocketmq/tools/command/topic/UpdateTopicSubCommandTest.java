@@ -31,7 +31,7 @@ public class UpdateTopicSubCommandTest {
         Options options = ServerUtil.buildCommandlineOptions(new Options());
         String[] subargs = new String[] {
             "-b 127.0.0.1:10911",
-            "-t unit-test",
+            "-t TopicTest",
             "-r 8",
             "-w 8",
             "-p 6",
@@ -43,7 +43,7 @@ public class UpdateTopicSubCommandTest {
         assertThat(commandLine.getOptionValue('b').trim()).isEqualTo("127.0.0.1:10911");
         assertThat(commandLine.getOptionValue('r').trim()).isEqualTo("8");
         assertThat(commandLine.getOptionValue('w').trim()).isEqualTo("8");
-        assertThat(commandLine.getOptionValue('t').trim()).isEqualTo("unit-test");
+        assertThat(commandLine.getOptionValue('t').trim()).isEqualTo("TopicTest");
         assertThat(commandLine.getOptionValue('p').trim()).isEqualTo("6");
         assertThat(commandLine.getOptionValue('o').trim()).isEqualTo("false");
         assertThat(commandLine.getOptionValue('u').trim()).isEqualTo("false");
