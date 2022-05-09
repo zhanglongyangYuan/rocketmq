@@ -89,8 +89,9 @@ public class IndexFile {
         return this.mappedFile.destroy(intervalForcibly);
     }
 
+    ///构建 index 核心源码
     public boolean putKey(final String key, final long phyOffset, final long storeTimestamp) {
-        if (this.indexHeader.getIndexCount() < this.indexNum) {
+        if (this.indexHeader.getIndexCount() < this.indexNum) {//phyoffset：消息对应的物理偏移量。
             int keyHash = indexKeyHashMethod(key);
             int slotPos = keyHash % this.hashSlotNum;
             int absSlotPos = IndexHeader.INDEX_HEADER_SIZE + slotPos * hashSlotSize;

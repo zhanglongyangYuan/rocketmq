@@ -119,7 +119,7 @@ public class AllocateMachineRoomNearByTest {
         Assert.assertTrue(hasAllocateAllQ(cidAll,mqAll,resAll));
 
         if (print) {
-            System.out.println("-------------------------------------------------------------------");
+            //System.out.println("-------------------------------------------------------------------");
         }
     }
 
@@ -150,7 +150,7 @@ public class AllocateMachineRoomNearByTest {
 
         Assert.assertTrue(hasAllocateAllQ(cidAll,mqAll,resAll));
         if (print) {
-            System.out.println("-------------------------------------------------------------------");
+            //System.out.println("-------------------------------------------------------------------");
         }
     }
 

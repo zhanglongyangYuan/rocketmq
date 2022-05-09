@@ -191,15 +191,15 @@ public class MappedFileQueue {
         return 0;
     }
 
-    public MappedFile getLastMappedFile(final long startOffset, boolean needCreate) {
+    public MappedFile getLastMappedFile(final long startOffset, boolean needCreate) {//第一次：startOffset = 0 and needCreate = true
         long createOffset = -1;
         MappedFile mappedFileLast = getLastMappedFile();
 
-        if (mappedFileLast == null) {
+        if (mappedFileLast == null) {//第一次创建
             createOffset = startOffset - (startOffset % this.mappedFileSize);
         }
 
-        if (mappedFileLast != null && mappedFileLast.isFull()) {
+        if (mappedFileLast != null && mappedFileLast.isFull()) {//如果是满了
             createOffset = mappedFileLast.getFileFromOffset() + this.mappedFileSize;
         }
 

@@ -200,7 +200,7 @@ public class IndexService {
 
     public void buildIndex(DispatchRequest req) {
         IndexFile indexFile = retryGetAndCreateIndexFile();
-        if (indexFile != null) {
+        if (indexFile != null) {///Users/mac/ideaProject/github/workhome/rocketmq/store/index/20220505123833594
             long endPhyOffset = indexFile.getEndPhyOffset();
             DispatchRequest msg = req;
             String topic = msg.getTopic();

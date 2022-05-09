@@ -425,6 +425,11 @@ public class ConsumeQueue {
     private boolean putMessagePositionInfo(final long offset, final int size, final long tagsCode,
         final long cqOffset) {
 
+        ///offset：ConsumerQueue的Message的CommitLog的物理位置
+        ///size:message 的大小
+        ///tagsCode:
+        //cqOffset:消息队列的逻辑偏移
+
         if (offset + size <= this.maxPhysicOffset) {
             log.warn("Maybe try to build consume queue repeatedly maxPhysicOffset={} phyOffset={}", maxPhysicOffset, offset);
             return true;
@@ -432,6 +437,7 @@ public class ConsumeQueue {
 
         this.byteBufferIndex.flip();
         this.byteBufferIndex.limit(CQ_STORE_UNIT_SIZE);
+        //下面这三个就是ConsumerQueue每个消息的三个字段
         this.byteBufferIndex.putLong(offset);
         this.byteBufferIndex.putInt(size);
         this.byteBufferIndex.putLong(tagsCode);

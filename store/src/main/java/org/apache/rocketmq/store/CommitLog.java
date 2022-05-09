@@ -550,6 +550,7 @@ public class CommitLog {
         return beginTimeInLock;
     }
 
+    //zly:xi
     public PutMessageResult putMessage(final MessageExtBrokerInner msg) {
         // Set the storage time
         msg.setStoreTimestamp(System.currentTimeMillis());
@@ -558,7 +559,7 @@ public class CommitLog {
         msg.setBodyCRC(UtilAll.crc32(msg.getBody()));
         // Back to Results
         AppendMessageResult result = null;
-
+        //DefaultMessageStore
         StoreStatsService storeStatsService = this.defaultMessageStore.getStoreStatsService();
 
         String topic = msg.getTopic();
@@ -610,7 +611,7 @@ public class CommitLog {
             // global
             msg.setStoreTimestamp(beginLockTimestamp);
 
-            if (null == mappedFile || mappedFile.isFull()) {
+            if (null == mappedFile || mappedFile.isFull()) {// mappedFile.isFull()?
                 mappedFile = this.mappedFileQueue.getLastMappedFile(0); // Mark: NewFile may be cause noise
             }
             if (null == mappedFile) {
@@ -667,8 +668,8 @@ public class CommitLog {
         storeStatsService.getSinglePutMessageTopicTimesTotal(msg.getTopic()).incrementAndGet();
         storeStatsService.getSinglePutMessageTopicSizeTotal(topic).addAndGet(result.getWroteBytes());
 
-        handleDiskFlush(result, putMessageResult, msg);
-        handleHA(result, putMessageResult, msg);
+        handleDiskFlush(result, putMessageResult, msg);///刷盘操作
+        handleHA(result, putMessageResult, msg);//slave几点同步数据
 
         return putMessageResult;
     }
@@ -1232,11 +1233,18 @@ public class CommitLog {
             return msgStoreItemMemory;
         }
 
+        /// maxBlank ：commitlog剩余的空间
+        /// 一个message 不能跨两个commitlog
+        /// 每个commitlog文件会放一个8字节的魔数表示结束
         public AppendMessageResult doAppend(final long fileFromOffset, final ByteBuffer byteBuffer, final int maxBlank,
             final MessageExtBrokerInner msgInner) {
             // STORETIMESTAMP + STOREHOSTADDRESS + OFFSET <br>
 
-            // PHY OFFSET
+            ///fileFromOffset：一个commit文件对应的偏移量（文件名即是偏移量）
+            ///byteBuffer.position():commitFile写文职
+
+
+            // PHY OFFSET 计算消息存储的绝对物理位置
             long wroteOffset = fileFromOffset + byteBuffer.position();
 
             int sysflag = msgInner.getSysFlag();
@@ -1248,6 +1256,7 @@ public class CommitLog {
 
             this.resetByteBuffer(storeHostHolder, storeHostLength);
             String msgId;
+            //broker的存储地址和消息的物理地址绝对位置生成唯一的messageId  类似有es中的docId
             if ((sysflag & MessageSysFlag.STOREHOSTADDRESS_V6_FLAG) == 0) {
                 msgId = MessageDecoder.createMessageId(this.msgIdMemory, msgInner.getStoreHostBytes(storeHostHolder), wroteOffset);
             } else {
@@ -1309,6 +1318,7 @@ public class CommitLog {
             }
 
             // Determines whether there is sufficient free space
+            ///每个commitlog文件会放一个8字节的魔数表示结束
             if ((msgLen + END_FILE_MIN_BLANK_LENGTH) > maxBlank) {
                 this.resetByteBuffer(this.msgStoreItemMemory, maxBlank);
                 // 1 TOTALSIZE

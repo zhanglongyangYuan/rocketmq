@@ -318,6 +318,7 @@ public class SendMessageProcessor extends AbstractSendMessageProcessor implement
         }
 
         response.setCode(-1);
+        ///盯一下
         super.msgCheck(ctx, requestHeader, response);
         if (response.getCode() != -1) {
             return response;

@@ -51,7 +51,9 @@ public class Producer {
         producer.setNamesrvAddr("127.0.0.1:9876");
         producer.start();
 
-        for (int i = 0; i < 1000; i++) {
+
+
+        for (int i = 0; i < 3; i++) {
             try {
 
                 /*
@@ -65,9 +67,10 @@ public class Producer {
                 /*
                  * Call send message to deliver message to one of brokers.
                  */
-                SendResult sendResult = producer.send(msg);
+                SendResult sendResult = producer.send(msg,5000000L);
 
                 System.out.printf("%s%n", sendResult);
+                System.out.println("=============");
             } catch (Exception e) {
                 e.printStackTrace();
                 Thread.sleep(1000);

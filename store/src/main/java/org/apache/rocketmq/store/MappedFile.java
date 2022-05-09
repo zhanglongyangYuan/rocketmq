@@ -42,12 +42,18 @@ import org.apache.rocketmq.store.util.LibC;
 import sun.nio.ch.DirectBuffer;
 
 public class MappedFile extends ReferenceResource {
+    /// 内存页大小，linux下通过getconf PAGE_SIZE获取，一般默认是4k
     public static final int OS_PAGE_SIZE = 1024 * 4;
     protected static final InternalLogger log = InternalLoggerFactory.getLogger(LoggerName.STORE_LOGGER_NAME);
 
+    /// 所有MappedFile实例已使用字节总数
     private static final AtomicLong TOTAL_MAPPED_VIRTUAL_MEMORY = new AtomicLong(0);
 
+    /// MappedFile个数
     private static final AtomicInteger TOTAL_MAPPED_FILES = new AtomicInteger(0);
+    /// wrotePosition：已经写入的内容的偏移量。这个偏移量可能是写入到文件也可能是写入到内存。
+    /// committedPosition：内存区域提交到文件的偏移量。该属性只有在异步加速模式下才会有用。
+    /// flushedPosition：已经刷入磁盘的偏移量。
     protected final AtomicInteger wrotePosition = new AtomicInteger(0);
     protected final AtomicInteger committedPosition = new AtomicInteger(0);
     private final AtomicInteger flushedPosition = new AtomicInteger(0);
@@ -59,10 +65,13 @@ public class MappedFile extends ReferenceResource {
     protected ByteBuffer writeBuffer = null;
     protected TransientStorePool transientStorePool = null;
     private String fileName;
+    /// 映射的起始偏移量，也是文件名
     private long fileFromOffset;
     private File file;
     private MappedByteBuffer mappedByteBuffer;
+    /// 文件最后一次写入时间
     private volatile long storeTimestamp = 0;
+    /// 是否是MappedFileQueue中的第一个文件
     private boolean firstCreateInQueue = false;
 
     public MappedFile() {
@@ -199,10 +208,11 @@ public class MappedFile extends ReferenceResource {
     public AppendMessageResult appendMessagesInner(final MessageExt messageExt, final AppendMessageCallback cb) {
         assert messageExt != null;
         assert cb != null;
-
+        ///当前的mappedFile的写入位置
         int currentPos = this.wrotePosition.get();
 
         if (currentPos < this.fileSize) {
+            ///这个Buffer和同步/异步刷盘有关（异步刷盘有两种模式可控选择）
             ByteBuffer byteBuffer = writeBuffer != null ? writeBuffer.slice() : this.mappedByteBuffer.slice();
             byteBuffer.position(currentPos);
             AppendMessageResult result;

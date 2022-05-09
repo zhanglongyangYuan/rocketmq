@@ -283,6 +283,7 @@ public class DefaultMessageStore implements MessageStore {
         this.storeStatsService.start();
 
         this.createTempFile();
+        /// 定时任务：例如删除文件
         this.addScheduleTask();
         this.shutdown = false;
     }
@@ -351,6 +352,7 @@ public class DefaultMessageStore implements MessageStore {
         }
     }
 
+    //消息存储的入口
     public PutMessageResult putMessage(MessageExtBrokerInner msg) {
         if (this.shutdown) {
             log.warn("message store has shutdown, so putMessage is forbidden");
@@ -392,8 +394,10 @@ public class DefaultMessageStore implements MessageStore {
         }
 
         long beginTime = this.getSystemClock().now();
+        ///上面都是消息的检查
+        ///CommitLog commitLog
         PutMessageResult result = this.commitLog.putMessage(msg);
-
+        ///运行时间
         long elapsedTime = this.getSystemClock().now() - beginTime;
         if (elapsedTime > 500) {
             log.warn("putMessage not in lock elapsed time(ms)={}, bodyLength={}", elapsedTime, msg.getBody().length);
@@ -1536,19 +1540,25 @@ public class DefaultMessageStore implements MessageStore {
 
         private void deleteExpiredFiles() {
             int deleteCount = 0;
+            // 文件保留时间：默认72小时
             long fileReservedTime = DefaultMessageStore.this.getMessageStoreConfig().getFileReservedTime();
+            // 间隔时间 100ms
             int deletePhysicFilesInterval = DefaultMessageStore.this.getMessageStoreConfig().getDeleteCommitLogFilesInterval();
+            // 强制地间隔
             int destroyMapedFileIntervalForcibly = DefaultMessageStore.this.getMessageStoreConfig().getDestroyMapedFileIntervalForcibly();
 
+            // deleteWhen = "04";
             boolean timeup = this.isTimeToDelete();
             boolean spacefull = this.isSpaceToDelete();
             boolean manualDelete = this.manualDeleteFileSeveralTimes > 0;
 
+            //四点的时候执行 || 磁盘达标的时候执行
             if (timeup || spacefull || manualDelete) {
 
                 if (manualDelete)
                     this.manualDeleteFileSeveralTimes--;
 
+                //
                 boolean cleanAtOnce = DefaultMessageStore.this.getMessageStoreConfig().isCleanFileForciblyEnable() && this.cleanImmediately;
 
                 log.info("begin to delete before {} hours file. timeup: {} spacefull: {} manualDeleteFileSeveralTimes: {} cleanAtOnce: {}",
@@ -1557,12 +1567,13 @@ public class DefaultMessageStore implements MessageStore {
                     spacefull,
                     manualDeleteFileSeveralTimes,
                     cleanAtOnce);
-
+                // ms
                 fileReservedTime *= 60 * 60 * 1000;
 
                 deleteCount = DefaultMessageStore.this.commitLog.deleteExpiredFile(fileReservedTime, deletePhysicFilesInterval,
                     destroyMapedFileIntervalForcibly, cleanAtOnce);
                 if (deleteCount > 0) {
+                    //啥也不干
                 } else if (spacefull) {
                     log.warn("disk space will be full soon, but delete file failed.");
                 }
@@ -1774,6 +1785,7 @@ public class DefaultMessageStore implements MessageStore {
         }
     }
 
+    //构建ConsumeQueue和Index入口
     class ReputMessageService extends ServiceThread {
 
         private volatile long reputFromOffset = 0;
@@ -1811,20 +1823,32 @@ public class DefaultMessageStore implements MessageStore {
             return this.reputFromOffset < DefaultMessageStore.this.commitLog.getMaxOffset();
         }
 
+        //构建ConsumeQueue和Index 方法 入口，每隔1ms执行一次
         private void doReput() {
+            /// 要构建的偏移量小于commitlog的最小偏移量：消费太慢，commitlog 给删除了
+            /// 构建的偏移量设置成最小的commitlog偏移量
             if (this.reputFromOffset < DefaultMessageStore.this.commitLog.getMinOffset()) {
                 log.warn("The reputFromOffset={} is smaller than minPyOffset={}, this usually indicate that the dispatch behind too much and the commitlog has expired.",
                     this.reputFromOffset, DefaultMessageStore.this.commitLog.getMinOffset());
                 this.reputFromOffset = DefaultMessageStore.this.commitLog.getMinOffset();
             }
+
+            //System.out.println("-------------------" + System.currentTimeMillis());
+
+            //this.isCommitLogAvailable():reputFromOffset 小于 commitlog 最大偏移量
             for (boolean doNext = true; this.isCommitLogAvailable() && doNext; ) {
 
+                ///不知道啥
                 if (DefaultMessageStore.this.getMessageStoreConfig().isDuplicationEnable()
                     && this.reputFromOffset >= DefaultMessageStore.this.getConfirmOffset()) {
                     break;
                 }
 
+                /// 构建consumerQueue和Index
+                /// reputFromOffset:构建consumerQueue和Index进度
+                /// 猜测：开始位置读个header第几个字段是长度，直接读取出来完整的信息
                 SelectMappedBufferResult result = DefaultMessageStore.this.commitLog.getData(reputFromOffset);
+
                 if (result != null) {
                     try {
                         this.reputFromOffset = result.getStartOffset();
