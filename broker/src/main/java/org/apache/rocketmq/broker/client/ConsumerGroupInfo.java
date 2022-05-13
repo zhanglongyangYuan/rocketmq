@@ -120,7 +120,7 @@ public class ConsumerGroupInfo {
         this.messageModel = messageModel;
         this.consumeFromWhere = consumeFromWhere;
 
-        ClientChannelInfo infoOld = this.channelInfoTable.get(infoNew.getChannel());
+        ClientChannelInfo infoOld = this.channelInfoTable.get(infoNew.getChannel());// ConsumerGroupInfo 消费组信息的封装：里面肯定有包含哪些消费者的chananl
         if (null == infoOld) {
             ClientChannelInfo prev = this.channelInfoTable.put(infoNew.getChannel(), infoNew);
             if (null == prev) {
@@ -150,7 +150,7 @@ public class ConsumerGroupInfo {
         boolean updated = false;
 
         for (SubscriptionData sub : subList) {
-            SubscriptionData old = this.subscriptionTable.get(sub.getTopic());
+            SubscriptionData old = this.subscriptionTable.get(sub.getTopic());// 不知道啥鸟啊 subscriptionTable
             if (old == null) {
                 SubscriptionData prev = this.subscriptionTable.putIfAbsent(sub.getTopic(), sub);
                 if (null == prev) {

@@ -349,11 +349,15 @@ public class MappedFileQueue {
             for (int i = 0; i < mfsLength; i++) {
                 MappedFile mappedFile = (MappedFile) mfs[i];
                 long liveMaxTimestamp = mappedFile.getLastModifiedTimestamp() + expiredTime;
+                // 两种情况
+                // 1 mappedFile最后更新时间超过72小时
+                // 2 cleanImmediately 需要立即清理
                 if (System.currentTimeMillis() >= liveMaxTimestamp || cleanImmediately) {
                     if (mappedFile.destroy(intervalForcibly)) {
                         files.add(mappedFile);
                         deleteCount++;
-
+                        // 这个还挺重要的，一次删除10个，然后比较磁盘满足不满足条件
+                        // 如果是磁盘到85%，不会删除所有的吧？ 有DELETE_FILES_BATCH_MAX就没问题
                         if (files.size() >= DELETE_FILES_BATCH_MAX) {
                             break;
                         }

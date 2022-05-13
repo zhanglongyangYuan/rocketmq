@@ -99,7 +99,7 @@ public class ConsumerManager {
         ConsumeType consumeType, MessageModel messageModel, ConsumeFromWhere consumeFromWhere,
         final Set<SubscriptionData> subList, boolean isNotifyConsumerIdsChangedEnable) {
 
-        ConsumerGroupInfo consumerGroupInfo = this.consumerTable.get(group);
+        ConsumerGroupInfo consumerGroupInfo = this.consumerTable.get(group);//consumerManager:consumerTable(消费组，消费组的详细信息)
         if (null == consumerGroupInfo) {
             ConsumerGroupInfo tmp = new ConsumerGroupInfo(group, consumeType, messageModel, consumeFromWhere);
             ConsumerGroupInfo prev = this.consumerTable.putIfAbsent(group, tmp);

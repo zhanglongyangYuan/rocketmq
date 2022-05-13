@@ -70,9 +70,10 @@ public class TopicPublishInfo {
     }
 
     public MessageQueue selectOneMessageQueue(final String lastBrokerName) {
+
         if (lastBrokerName == null) {
             return selectOneMessageQueue();
-        } else {
+        } else {// 如有有lastBrokerName，代表前面有失败了
             int index = this.sendWhichQueue.getAndIncrement();
             for (int i = 0; i < this.messageQueueList.size(); i++) {
                 int pos = Math.abs(index++) % this.messageQueueList.size();

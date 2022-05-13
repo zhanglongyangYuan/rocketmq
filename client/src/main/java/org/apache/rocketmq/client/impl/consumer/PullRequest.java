@@ -19,11 +19,11 @@ package org.apache.rocketmq.client.impl.consumer;
 import org.apache.rocketmq.common.message.MessageQueue;
 
 public class PullRequest {
-    private String consumerGroup;
-    private MessageQueue messageQueue;
-    private ProcessQueue processQueue;
-    private long nextOffset;
-    private boolean lockedFirst = false;
+    private String consumerGroup;//拉取的 消费者组
+    private MessageQueue messageQueue;// 拉取的 消息队列
+    private ProcessQueue processQueue;// 消息处理队列，从broke拉取的消息会先存放到这，然后提交给消费者线程消费
+    private long nextOffset;// 待拉取的messageQueue的偏移量
+    private boolean lockedFirst = false;// 是否被锁定
 
     public boolean isLockedFirst() {
         return lockedFirst;

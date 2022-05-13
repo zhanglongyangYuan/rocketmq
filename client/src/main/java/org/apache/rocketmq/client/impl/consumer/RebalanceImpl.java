@@ -260,7 +260,9 @@ public abstract class RebalanceImpl {
                 break;
             }
             case CLUSTERING: {
+                //获取topicn 的 List<queue>
                 Set<MessageQueue> mqSet = this.topicSubscribeInfoTable.get(topic);
+                // List<consumerId>
                 List<String> cidAll = this.mQClientFactory.findConsumerIdList(topic, consumerGroup);
                 if (null == mqSet) {
                     if (!topic.startsWith(MixAll.RETRY_GROUP_TOPIC_PREFIX)) {

@@ -49,11 +49,13 @@ public class Producer {
          * Launch the instance.
          */
         producer.setNamesrvAddr("127.0.0.1:9876");
+        //producer.setSendLatencyFaultEnable(true);
+//        producer.setRetryTimesWhenSendFailed();
         producer.start();
 
 
 
-        for (int i = 0; i < 3; i++) {
+        for (int i = 0; i < 10000; i++) {
             try {
 
                 /*
@@ -71,6 +73,8 @@ public class Producer {
 
                 System.out.printf("%s%n", sendResult);
                 System.out.println("=============");
+                //Thread.sleep(1 * 1000);
+
             } catch (Exception e) {
                 e.printStackTrace();
                 Thread.sleep(1000);

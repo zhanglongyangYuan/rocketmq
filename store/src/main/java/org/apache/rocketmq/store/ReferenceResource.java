@@ -46,6 +46,8 @@ public abstract class ReferenceResource {
             this.firstShutdownTimestamp = System.currentTimeMillis();
             this.release();
         } else if (this.getRefCount() > 0) {
+            /// 如果写入速度不是足够快，那么永远不会到90%？到底是什么会导致到90？
+            // 如果按着这个逻辑，就算带着引用的也会2分钟内删除
             if ((System.currentTimeMillis() - this.firstShutdownTimestamp) >= intervalForcibly) {
                 this.refCount.set(-1000 - this.getRefCount());
                 this.release();
