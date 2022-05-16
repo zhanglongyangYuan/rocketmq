@@ -52,6 +52,7 @@ public class FilterAPI {
                         String trimString = tag.trim();
                         if (trimString.length() > 0) {
                             subscriptionData.getTagsSet().add(trimString);
+                            // 除了设置tags，还设置了code
                             subscriptionData.getCodeSet().add(trimString.hashCode());
                         }
                     }

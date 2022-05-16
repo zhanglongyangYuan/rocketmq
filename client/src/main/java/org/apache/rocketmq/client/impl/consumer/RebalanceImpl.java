@@ -219,6 +219,8 @@ public abstract class RebalanceImpl {
     }
 
     public void doRebalance(final boolean isOrder) {
+        // 属于本tag的
+        //ConcurrentMap<String /* topic */, SubscriptionData>
         Map<String, SubscriptionData> subTable = this.getSubscriptionInner();
         if (subTable != null) {
             for (final Map.Entry<String, SubscriptionData> entry : subTable.entrySet()) {
@@ -260,9 +262,9 @@ public abstract class RebalanceImpl {
                 break;
             }
             case CLUSTERING: {
-                //获取topicn 的 List<queue>
+                //获取所有的queue
                 Set<MessageQueue> mqSet = this.topicSubscribeInfoTable.get(topic);
-                // List<consumerId>
+                //获取所有的consumer
                 List<String> cidAll = this.mQClientFactory.findConsumerIdList(topic, consumerGroup);
                 if (null == mqSet) {
                     if (!topic.startsWith(MixAll.RETRY_GROUP_TOPIC_PREFIX)) {
@@ -288,8 +290,8 @@ public abstract class RebalanceImpl {
                         allocateResult = strategy.allocate(
                             this.consumerGroup,
                             this.mQClientFactory.getClientId(),
-                            mqAll,
-                            cidAll);
+                            mqAll,// 所有的的队列
+                            cidAll);// 所有的客户端
                     } catch (Throwable e) {
                         log.error("AllocateMessageQueueStrategy.allocate Exception. allocateMessageQueueStrategyName={}", strategy.getName(),
                             e);
@@ -301,12 +303,16 @@ public abstract class RebalanceImpl {
                         allocateResultSet.addAll(allocateResult);
                     }
 
+                    // 分配红黑树等等
                     boolean changed = this.updateProcessQueueTableInRebalance(topic, allocateResultSet, isOrder);
+
                     if (changed) {
                         log.info(
                             "rebalanced result changed. allocateMessageQueueStrategyName={}, group={}, topic={}, clientId={}, mqAllSize={}, cidAllSize={}, rebalanceResultSize={}, rebalanceResultSet={}",
                             strategy.getName(), consumerGroup, topic, this.mQClientFactory.getClientId(), mqSet.size(), cidAll.size(),
                             allocateResultSet.size(), allocateResultSet);
+
+                        //
                         this.messageQueueChanged(topic, mqSet, allocateResultSet);
                     }
                 }
@@ -352,9 +358,9 @@ public abstract class RebalanceImpl {
                     }
                 } else if (pq.isPullExpired()) {
                     switch (this.consumeType()) {
-                        case CONSUME_ACTIVELY:
+                        case CONSUME_ACTIVELY:// actively
                             break;
-                        case CONSUME_PASSIVELY:
+                        case CONSUME_PASSIVELY://passively
                             pq.setDropped(true);
                             if (this.removeUnnecessaryMessageQueue(mq, pq)) {
                                 it.remove();

@@ -33,6 +33,7 @@ public class SubscriptionData implements Comparable<SubscriptionData> {
     private String subString;
     private Set<String> tagsSet = new HashSet<String>();
     private Set<Integer> codeSet = new HashSet<Integer>();
+    // 这个是干球用的
     private long subVersion = System.currentTimeMillis();
     private String expressionType = ExpressionType.TAG;
 

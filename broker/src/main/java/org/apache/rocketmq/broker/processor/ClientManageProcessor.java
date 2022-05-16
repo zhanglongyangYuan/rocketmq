@@ -77,8 +77,8 @@ public class ClientManageProcessor implements NettyRequestProcessor {
         HeartbeatData heartbeatData = HeartbeatData.decode(request.getBody(), HeartbeatData.class);
         // clientChannelInfo
         ClientChannelInfo clientChannelInfo = new ClientChannelInfo(
-            ctx.channel(),
-            heartbeatData.getClientID(),
+            ctx.channel(),//连接管道保存
+            heartbeatData.getClientID(),//clientId
             request.getLanguage(),
             request.getVersion()
         );

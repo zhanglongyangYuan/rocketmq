@@ -57,6 +57,7 @@ public class ExpressionMessageFilter implements MessageFilter {
         }
     }
 
+    // 
     @Override
     public boolean isMatchedByConsumeQueue(Long tagsCode, ConsumeQueueExt.CqExtUnit cqExtUnit) {
         if (null == subscriptionData) {

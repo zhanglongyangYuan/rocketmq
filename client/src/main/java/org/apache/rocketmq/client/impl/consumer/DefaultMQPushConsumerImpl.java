@@ -219,6 +219,8 @@ public class DefaultMQPushConsumerImpl implements MQConsumerInner {
 
         pullRequest.getProcessQueue().setLastPullTimestamp(System.currentTimeMillis());
 
+        //下面一堆限流的校验
+
         try {
             this.makeSureStateOK();
         } catch (MQClientException e) {
@@ -298,6 +300,7 @@ public class DefaultMQPushConsumerImpl implements MQConsumerInner {
 
         final long beginTimestamp = System.currentTimeMillis();
 
+        //往netty后的回调函数：核心流程
         PullCallback pullCallback = new PullCallback() {
             @Override
             public void onSuccess(PullResult pullResult) {
@@ -306,7 +309,7 @@ public class DefaultMQPushConsumerImpl implements MQConsumerInner {
                         subscriptionData);
 
                     switch (pullResult.getPullStatus()) {
-                        case FOUND:
+                        case FOUND:// 核心流程
                             long prevRequestOffset = pullRequest.getNextOffset();
                             pullRequest.setNextOffset(pullResult.getNextBeginOffset());
                             long pullRT = System.currentTimeMillis() - beginTimestamp;
@@ -405,6 +408,7 @@ public class DefaultMQPushConsumerImpl implements MQConsumerInner {
         boolean commitOffsetEnable = false;
         long commitOffsetValue = 0L;
         if (MessageModel.CLUSTERING == this.defaultMQPushConsumer.getMessageModel()) {
+            //理解错了：原来还是从本地的内存中读取的offsetTable
             commitOffsetValue = this.offsetStore.readOffset(pullRequest.getMessageQueue(), ReadOffsetType.READ_FROM_MEMORY);
             if (commitOffsetValue > 0) {
                 commitOffsetEnable = true;
@@ -437,7 +441,7 @@ public class DefaultMQPushConsumerImpl implements MQConsumerInner {
                 pullRequest.getNextOffset(),
                 this.defaultMQPushConsumer.getPullBatchSize(),
                 sysFlag,
-                commitOffsetValue,
+                commitOffsetValue,//顺带着把消费进度上报一下
                 BROKER_SUSPEND_MAX_TIME_MILLIS,
                 CONSUMER_TIMEOUT_MILLIS_WHEN_SUSPEND,
                 CommunicationMode.ASYNC,
@@ -575,6 +579,7 @@ public class DefaultMQPushConsumerImpl implements MQConsumerInner {
 
                 this.checkConfig();
 
+                // 重复消费的topic，代码中自动订阅
                 this.copySubscription();
 
                 // 1 构建 RebalanceImpl
@@ -637,7 +642,7 @@ public class DefaultMQPushConsumerImpl implements MQConsumerInner {
                 }
 
                 //5 MQClientInstance 启动，进入消息消费：好像是有线程池奥
-                // 其中包含所有的定时任务的启动
+                // 其中包含所有的定时任务的启动 核心历程
                 mQClientFactory.start();//jvm中的消费者和生产者持有同一个client，只会启动一次
                 log.info("the consumer [{}] start OK.", this.defaultMQPushConsumer.getConsumerGroup());
                 this.serviceState = ServiceState.RUNNING;
@@ -653,9 +658,13 @@ public class DefaultMQPushConsumerImpl implements MQConsumerInner {
                 break;
         }
 
+        // 从nameServer更新topic的路由信息
         this.updateTopicSubscribeInfoWhenSubscriptionChanged();
+        // 检查consumer的配置
         this.mQClientFactory.checkClientInBroker();
+        // 向每个broker发送心跳信息：注册consumer
         this.mQClientFactory.sendHeartbeatToAllBrokerWithLock();
+        // 立即出发一次 rabalance：rabalance核心逻辑
         this.mQClientFactory.rebalanceImmediately();
     }
 
@@ -836,6 +845,7 @@ public class DefaultMQPushConsumerImpl implements MQConsumerInner {
                 for (final Map.Entry<String, String> entry : sub.entrySet()) {
                     final String topic = entry.getKey();
                     final String subString = entry.getValue();
+                    // 里面有tags的逻辑
                     SubscriptionData subscriptionData = FilterAPI.buildSubscriptionData(this.defaultMQPushConsumer.getConsumerGroup(),
                         topic, subString);
                     this.rebalanceImpl.getSubscriptionInner().put(topic, subscriptionData);
@@ -850,10 +860,11 @@ public class DefaultMQPushConsumerImpl implements MQConsumerInner {
                 case BROADCASTING:
                     break;
                 case CLUSTERING:
+                    //%RETRY% + groupName
                     final String retryTopic = MixAll.getRetryTopic(this.defaultMQPushConsumer.getConsumerGroup()); // %RETRY% + group
                     //
                     SubscriptionData subscriptionData = FilterAPI.buildSubscriptionData(this.defaultMQPushConsumer.getConsumerGroup(),
-                        retryTopic, SubscriptionData.SUB_ALL);
+                        retryTopic, SubscriptionData.SUB_ALL);//SubscriptionData.SUB_ALL ： * 订阅所有
                     this.rebalanceImpl.getSubscriptionInner().put(retryTopic, subscriptionData);
                     break;
                 default:

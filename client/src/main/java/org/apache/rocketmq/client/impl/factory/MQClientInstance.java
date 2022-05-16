@@ -238,7 +238,9 @@ public class MQClientInstance {
                     // Start various schedule tasks
                     // 启动所有相关的定时任务
                     this.startScheduledTask();
-                    // Start pull service
+                    // 最核心的流程
+                    // Start pull service：拉取消息的任务
+                    // while循环
                     this.pullMessageService.start();
                     // Start rebalance service
                     this.rebalanceService.start();
@@ -545,6 +547,7 @@ public class MQClientInstance {
         if (!this.brokerAddrTable.isEmpty()) {
             long times = this.sendHeartbeatTimesTotal.getAndIncrement();
             Iterator<Entry<String, HashMap<Long, String>>> it = this.brokerAddrTable.entrySet().iterator();
+            // 循环发送每一个broker
             while (it.hasNext()) {
                 Entry<String, HashMap<Long, String>> entry = it.next();
                 String brokerName = entry.getKey();
@@ -702,7 +705,7 @@ public class MQClientInstance {
         // clientID
         heartbeatData.setClientID(this.clientId);
 
-        // Consumer
+        // Consumer的心跳信息
         for (Map.Entry<String, MQConsumerInner> entry : this.consumerTable.entrySet()) {
             MQConsumerInner impl = entry.getValue();
             if (impl != null) {
